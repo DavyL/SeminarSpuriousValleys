@@ -1,0 +1,455 @@
+
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This file is a template using the "beamer" package to create slides for a talk or presentation
+% - Giving a talk on some subject.
+% - The talk is between 15min and 45min long.
+% - Style is ornate.
+
+% MODIFIED by Jonathan Kew, 2008-07-06
+% The header comments and encoding in this file were modified for inclusion with TeXworks.
+% The content is otherwise unchanged from the original distributed with the beamer package.
+
+\documentclass{beamer}
+\newtheorem{proposition}{Proposition}
+
+
+% Copyright 2004 by Till Tantau <tantau@users.sourceforge.net>.
+%
+% In principle, this file can be redistributed and/or modified under
+% the terms of the GNU Public License, version 2.
+%
+% However, this file is supposed to be a template to be modified
+% for your own needs. For this reason, if you use this file as a
+% template and not specifically distribute it as part of a another
+% package/program, I grant the extra permission to freely copy and
+% modify this file as you see fit and even to delete this copyright
+% notice. 
+
+
+\mode<presentation>
+{
+  \usetheme{Warsaw}
+  % or ...
+
+  \setbeamercovered{transparent}
+  % or whatever 
+}
+
+
+\usepackage[english]{babel}
+% or whatever
+
+\usepackage[utf8]{inputenc}
+% or whatever
+\usepackage{mathrsfs}  
+\usepackage{graphicx}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage{subcaption}
+\usepackage{bbm}
+\newcommand*{\TakeFourierOrnament}[1]{{%
+\fontencoding{U}\fontfamily{futs}\selectfont\char#1}}
+\newcommand*{\warning}{\TakeFourierOrnament{66}}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+%\newtheorem[conjecture]{Conjecture}
+
+\title[Optimization landscape and spurious valleys]{Spurious Valleys in One-hidden-layer Neural Networks, Optimization Landscapes}
+\subtitle{By L. \textsc{Venturi}, A. \textsc{Bandeira} and J. \textsc{Bruna}\\
+In \emph{JMLR, 2019}}
+
+\author[Davy] % (optional, use only with lots of authors)
+{Leo Davy}
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+\institute[ENS Lyon] % (optional, but mostly needed)
+{
+  ENS Lyon \\
+  M2 Advanced Mathematics}
+% - Use the \inst command only if there are several affiliations.
+% - Keep it tildeple, no one is interested in your street address.
+
+\date[Short Occasion] % (optional)
+{March 2022}
+
+\defbeamertemplate*{footline}{shadow theme}
+{%
+  \leavevmode%
+  \hbox{\begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm plus1fil,rightskip=.3cm]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertframenumber\,/\,\inserttotalframenumber\hfill\insertshortauthor%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm,rightskip=.3cm plus1fil]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle%
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+\setbeamertemplate{headline}
+{%
+  \leavevmode%
+  \begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex]{section in head/foot}%
+    \hbox to .5\paperwidth{\hfil\insertsectionhead\hfil}
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex]{subsection in head/foot}%
+    \hbox to .5\paperwidth{\hfil\insertsubsectionhead\hfil}
+  \end{beamercolorbox}%
+}
+\setbeamertemplate{navigation symbols}{} 
+\subject{Talks}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+
+\begin{frame}{Current situation of ML}
+	\begin{itemize}
+		\item There exists random variables $(X, Y)$ such that $Y = f(X)$
+		\item There exists models $\Phi_\theta : X \mapsto \Phi_\theta(X)$
+		\item There exists some optimisation methods $\Phi_\theta \mapsto \Phi_{\tilde\theta}$
+		\item Such that $L(\Phi_{\tilde\theta}, Y) \sim 0$ (L could be MSE, log-likelihood, ...)
+	\end{itemize}
+	A lot of blackboxes... and very few guarantees...
+\end{frame}
+
+\begin{frame}{Optimization landscape}
+	For $l$ a convex function in its first variable, we define the loss as: 
+	$$\theta\in\Theta \mapsto L(\Phi_\theta(X); Y) := \mathbb{E}_X l(\Phi_\theta(X), Y) := L(\theta).$$
+	$\Theta$ the parameter space ($\mathbb{R}^P, P\gg 1$)
+	\begin{block}{Goal}
+		Understanding the optimization landscape for simple models
+	\end{block}
+\end{frame}
+
+
+\begin{frame}{Optimization paths}
+	Starting from some initial parameter $\theta_0 \in \Theta$ 
+		\begin{itemize}
+			\item discrete : find $\theta_1, \cdots, \theta_N$ s.t. $L(\theta_{k+1}) \leq L(\theta_k)$
+			\item continuous : find a continuous path $t\in [0,1]\mapsto \theta_t \in\Theta$ is non-increasing
+		\end{itemize}
+	\begin{definition}[descent path]
+		We call a descent path, a path $t:[0,1] \to \Theta$ that satisfies the two assumptions
+			\begin{itemize}
+				\item $t \mapsto \theta_t$ is continuous
+				\item $t \mapsto L(\theta_t)$ is not increasing
+			\end{itemize}
+	\end{definition}
+	The last property is called \emph{no up-hill climb property}.
+\end{frame}
+
+\begin{frame}{Problem}
+	Depending on $(X,Y), \theta \mapsto \Phi_\theta$ and $l$, is there for any initial parameter $\theta_0$ a descent path that reaches a global minima ?
+	\begin{itemize}
+		\item Does the optimization landscape contain a spurious valley?
+	\end{itemize}
+	\begin{definition}[spurious valley]
+		A \emph{spurious valley} is a maximally descent-path-connected component that doesn't contain a global minima.
+	\end{definition}
+
+
+\end{frame}
+
+\begin{frame}{Model considered}
+	One-hidden layer Neural Networks (NNs) with continuous activation function $\sigma$.
+	\begin{equation*}
+		X \mapsto Wx \mapsto \sigma(Wx) \mapsto U\sigma(Wx) = \Phi_{\theta = (U,W)}(X)
+	\end{equation*}
+	\begin{itemize}
+		\item \emph{activation function}: $\sigma : \mathbb{R}\to\mathbb{R}$ continuous and acts component-wise on $\mathbb{R}^p$
+		\item \emph{filter functions}: $\psi_{\sigma, w}(x) \mapsto \sigma(\langle w, x\rangle)$
+		\item \emph{parameters}: $\theta = (U,W) \in \mathbb{R}^{m\times p}\times\mathbb{R}^{p\times n}$
+	\end{itemize}
+	Additional assumptions : $m=1$, $l:\mathbb{R}^m\times\mathbb{R}^m$ \emph{convex in its first variable}, $X\in R_2(\sigma, n) =\{X : ||\sigma(w, \cdot)||_{L^2(X)} < \infty, \forall \theta\}$
+\end{frame}
+\section{Functional spaces}
+\begin{frame}
+	Functions expressible by:
+	\begin{itemize}
+		\item  $p$ parameters:
+			\begin{align*}
+				V_{\sigma, p} 	&= \left\{ \Phi_{\sigma, \theta} : \theta \in \Theta_p \right\}\\
+							&= \left\{ \sum_{i=1}^p u_i \psi_{\sigma, w} : (U, W)\in\theta_p \right\}.
+			\end{align*}
+		$V_{\sigma, p}$ is not a vector space in general.\footnote{Take $\sigma(z)=z^2$ and $X=(x,y)$, then $xy\in V_\sigma$ but $xy\notin V_{\sigma, 1}$}
+		\item an arbitrary number of parameters:
+			\begin{equation*}
+				V_\sigma = \bigcup_{p=1}^\infty V_{\sigma, p} \quad \text{Usually a (big) vector space}
+			\end{equation*}
+
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Intrinsic dimensions}
+	\begin{itemize}
+		\item lower intrinsic dimension:
+			\begin{equation*}
+				\dim_*(\sigma, n) = \inf\{p : f \in V_\sigma \implies f \in V_{\sigma, p}\}
+			\end{equation*}
+		i.e. the minimal number of parameters to express any function in $V_\sigma$
+		\item upper intrinsic dimension:
+			\begin{equation*}
+				\dim^*(\sigma, n) = \sup_{X\in R_2(\sigma, n)} \dim_{L^2(X)} V_\sigma
+			\end{equation*}
+		i.e. the minimal number of parameters for $V_{\sigma,p}$ to be a linear space.
+	\end{itemize}
+		
+\end{frame}
+
+\begin{frame}{Examples}
+	For general distribution $X$:
+		\begin{align*}
+			\sigma(z) = z 	&\longrightarrow \dim^*(\sigma, n) = n\\
+						&\longrightarrow \dim_*(\sigma, n) = 1
+		\end{align*}
+	For finitely supported $X$ on $N$ atoms, i.e. $\mathbb{P}(X\in\{x_1, \cdots, x_N\}) = 1$:
+		\begin{align*}
+			&V_\sigma \subseteq L^2(X) \cong \mathbb{R}^N\\
+			&\longrightarrow\dim^*(\sigma, X) \leq N
+		\end{align*}
+\end{frame}
+
+\begin{frame}{Polynomial activation functions}
+	\begin{itemize}
+		\item If $\sigma(z) = z^d$, then 
+			\begin{equation*}
+				V_\sigma = \left\{\text{homogeneous polynomial of degree $d$ in $X_1,\cdots, X_n$}\right\}
+			\end{equation*}
+		so, 
+			\begin{equation*}
+				dim^*(\sigma, n) = \binom{n+d-1}{d} = \mathcal{O}(n^d)
+			\end{equation*}
+		\item If $\sigma(z) = \sum_{i=1}^d a_kz^k$, then
+			\begin{equation*}
+				dim^*(\sigma, n) = \sum_{i=1}^d \binom{n+d-1}{i}\mathbbm{1}_{a_i\neq 0}
+			\end{equation*}
+	\end{itemize}
+	In particular, $V_\sigma$ is of finite dimension if $\sigma$ is a polynomial.
+\end{frame}
+
+
+\begin{frame}{Universal approximation property}
+	\begin{theorem}
+		Let $\sigma$ a continuous activation function, then the following statements are equivalent:
+			\begin{itemize}
+				\item For any continuous compactly supported $f$ ($f\in \mathcal{C}_c(\mathbb{R}^n)$) and any $\varepsilon>0$, there exists a number of parameters $p\geq 1$ and a one hidden-layer $\Phi_\theta \in V_{\sigma,p}$ satisfying
+					\begin{equation*}
+						||f-\Phi_\theta||_\infty < \varepsilon
+					\end{equation*}
+				\item $\sigma$ is not a polynomial
+			\end{itemize}
+	\end{theorem}
+
+	
+	\begin{corollary}
+		$\dim^*(\sigma, n) < \infty \iff \sigma$ is a polynomial.
+	\end{corollary}
+
+
+\end{frame}
+
+
+\section{Spurious valleys}
+\begin{frame}{Spurious valleys}
+	Recall:
+	\begin{itemize}
+		\item goal: minimize $L(\theta) = \mathbb{E} l(\Phi_\theta(X), Y)$
+		\item using descent path: $t\in [0,1] \mapsto \theta_t = \gamma(t)$ s.t. $t_2\geq t_1 \implies L(\theta_2) \leq L(\theta_1)$.
+	\end{itemize}
+	Denote $\Omega_{\theta_0} =\{ \gamma(1) \in \Theta: \gamma \text{ descent path starting at $\theta_0$}\}$ (a "rooted valley")
+	\begin{block}{Definition/Theorem}
+		If $L$ is continuous, then t.f.a.e.:
+		\begin{enumerate}
+			\item There is no spurious valley
+			\item $\forall C>0$ and any maximal descent-path-connected component $$U\subset \Omega_C=\{\theta : L(\theta) \leq C\},$$ $U$ contains a global minima
+			\item $\forall \theta_0 \in \Theta$, $\Omega_{\theta_0}$ contains a global minima
+		\end{enumerate}
+	\end{block}
+\end{frame}
+
+\begin{frame}
+	\begin{theorem}
+		If $\sigma$ is continuous, $X\in R_2(\sigma, n)$, $l$ convex in its first argument with $dim^*(\sigma, n) <\infty$, then
+		\begin{equation*}
+			L(\theta) = \mathbb{E} l(\Phi_\theta(X),Y)
+		\end{equation*}
+	for one hidden-layer NNs $\Phi_\theta$ has no spurious valley in the overparametrised regime
+		\begin{equation*}
+			p\geq dim^*(\sigma, n)
+		\end{equation*}
+	\end{theorem}
+	
+	\begin{corollary}
+		If $\sigma$ is a polynomial, or if $X$ is supported on a finite number of atoms, then overparametrisation is feasible.
+	\end{corollary}
+\end{frame}
+
+\begin{frame}
+	Proof by constructing a path to a global minima in two parts
+	\begin{enumerate}
+		\item Treat $V_\sigma$ as a finite dimensional vector space
+				\begin{itemize}
+					\item Pick a basis $(w_i) = W_1$
+					\item Construct a path $\gamma$ such that $\gamma(0) = \theta_0$ and $\gamma(1) = (U_1, W_1)$ for some $U_1$
+					\item Make this path such that $\forall t_1, t_2$, $\Phi_{t_1}(x) = \Phi_{t_2}(x)$		
+				\end{itemize}
+		\item Optimize (very easily) using the last layer only
+			\begin{itemize}
+				\item Pick a global minima and write it in the basis $W_1$
+			\end{itemize}
+					\begin{equation*}
+						\Phi_{\theta^*=(U^*, W_1)} = U^*\sigma(W_1 \cdot) = \sum_{i=1}^p u_i\psi_{\sigma, w_i}
+					\end{equation*}
+			\begin{itemize}
+				\item Translate the coefficients of $U_1$ to those of $U^*$
+				\begin{align*}
+					L(\theta_t = ((1-t)U_1 + tU^*, W_1)) &= \mathbb{E}l((1-t)\Phi_{\theta_1} + t\Phi_{\theta^*}, X), Y)\\
+						&\leq (1-t)L(\theta_1) + tL(\theta^*), \quad \forall t\in [0,1].
+				\end{align*}
+			\end{itemize}
+	\end{enumerate}
+	Using \emph{convexity in its first variable of the loss function} $l$, we have a descent path to a global minima
+\end{frame}
+
+\begin{frame}{Treating $V_\sigma$ as a f.d. vector space ?}
+	 It is not straightforward to consider $V_\sigma$ as a finite dimensional vector space through $W$, the only interaction we can have with $V_\sigma$ is through $\sigma$ !
+	This problem is solved by using a Reproducing Kernel Hilbert Space (RKHS)
+	\begin{lemma}
+		If $V_\sigma$ is finite dimensional, then there exist $\langle \cdot, \cdot\rangle$ and $\phi :\mathbb{R}^n\to V_\sigma \cong R^q$, where $q=\dim^*(\sigma, n)$, such that 
+		\begin{equation*}
+			\langle \psi_{\sigma, w}, \phi(x)\rangle = \psi_{\sigma, w}(x) = \sigma(\langle w, x\rangle).
+		\end{equation*}
+		Also, the map $w\in\mathbb{R}^n\to \psi_{\sigma, w}$ is continuous.
+	\end{lemma}
+	This gives us two maps $\phi, \psi:\mathbb{R}^n\to\mathbb{R}^q$ such that $\sigma(\langle w, x\rangle) = \langle \psi(w), \phi(x)\rangle$.
+	Thus, we can rewrite $\Phi_\theta(X) = U\sigma(Wx)$ as
+	\begin{equation*}
+		\Phi_\theta(x) = U\psi(W)\phi(x).
+	\end{equation*}
+\end{frame}
+
+\begin{frame}
+	Now that we can rewrite our network in a \emph{linearized} way:
+	\begin{equation*}
+		\Phi_\theta(x) = U\psi(W)\phi(x)
+	\end{equation*}	
+	where $\psi(W)\in\mathbb{R}^{p\times q}$.\\
+	From this, we don't want $W$ to be a basis, but we want $\psi(W)$ to be a generating family (since  $p\geq q= \dim^*(\sigma, n)$, we want $\text{rank}(\psi(W)) = q$), i.e., we want the $p$ rows of $\psi(w_i)$ of $\psi(W)$ to contain $q$ linearly independent rows.\\
+	We can do as follows, with constant output:
+	\begin{itemize}
+		\item If $\text{rank}(\psi(W)) < q$, $W$ can be continuously mapped to $\psi(\tilde W)$ that has zeroes on the $p-q$ dependent rows.
+		\item Then modifying $U$ to have zeros on the zeros of $\psi(\tilde W)$ we can ignore the degenerate part of $W$.
+		\item Finally, we are free to do what we want in $\tilde W$ to get a matrix of full rank.
+	\end{itemize}
+	
+\end{frame}
+
+\begin{frame}
+	\begin{enumerate}
+		\item Linearize the network (RKHS)
+		\item Ignore the degenerate part of $\psi(W)$ (technical)
+		\item Turn $W$ into a full rank matrix (easy)
+		\item Reach a global minima
+	\end{enumerate}
+	Only during the last step we decrease the loss, this is where we use the convexity in the first argument of $l$.
+
+\end{frame}
+
+\begin{frame}{Underparametrisation}
+	So far, if $\sigma$ is a polynomial, or $X$ has finitely many atoms, then
+	\begin{itemize}
+		\item $\dim^*(\sigma, n)$ or $\dim^*(\sigma, X)$ is less than $\infty$
+		\item then $p\geq dim^*\implies$ no spurious valley 
+	\end{itemize}
+	What if $p<\dim^*$ ? \\
+	Note that this is almost always the case:\\
+	$\sigma$ = ReLU, sigmoid, softplus,...
+\end{frame}
+
+\begin{frame}{Underparametrised networks can have arbitrarily bad spurious valleys}
+	\begin{theorem}
+		For $n\geq 2$, the square loss and non-negative activation function $\sigma$.\\
+		If 
+		\begin{equation*}
+			p \leq \frac{1}{2}\dim^*(\sigma, n-1),
+		\end{equation*}
+		Then, $\forall M>0$, there exists a non-empty open $\Omega$ and a random variable $(X,Y)$ s.t. for \emph{any} path $\theta:[0,1]\to \Theta$ such that $\theta(0) \in\Omega$ and $\theta(1)$ is a global minima satisfies
+		\begin{equation*}
+			\max_t L(\theta_t) \geq \min_{\theta\in\Omega} L(\theta) + M.
+		\end{equation*} 
+	\end{theorem}
+\end{frame}
+
+\begin{frame}{With many parameters, spurious valleys are not so bad}
+	\begin{theorem}
+		If the $p$ initial units $\tilde W$ are initialized independently uniformly at random over the sphere $\mathbb{S}^n$. Let $f^*(X) = \mathbb{E}(Y|X)$ some measurable function that is minimal for the square loss, \\
+		then there exists a descent path $t\mapsto \theta_t$
+ such that
+		\begin{equation*}
+			L(\theta_1) \leq \mathbb{E}||f^*(X) - Y||_2^2 + \frac{1}{\lambda}
+		\end{equation*}
+		if $p\geq \mathcal{O}(\lambda \log(\frac{\lambda}{\delta})$ with probability $1-\delta$, for every $\lambda > 1 > \delta > 0.$
+	\end{theorem}
+The floor of most valleys gets lower when parametrisation increases. 
+\end{frame}
+
+
+\begin{frame}{Proof}
+	In the same spirit as for the overparametrised networks (turn the problem into one where optimization is easy to perform).\\
+	\underline{goal:} Get filter vectors $w_i$ not too far from some good vectors $w_i^*$ (sample the $w_i$ independently uniformly at random) \\
+	\begin{equation*}
+		\mathbb{E}\left(\frac{1}{p}\sum_{i=1}^p \rho(w_i)\sigma(\langle w_i, x\rangle) - f^*(x)\right)^2 = \mathcal{O}\left(\frac{1}{p}\right)
+	\end{equation*}
+	assuming $f^*(x) = \int \rho(w)\sigma(\langle w, x\rangle)d\tau(w)$.\\
+	There is a good approximation to $f^*$ using the filters $w_i$. From last part of previous proof, using the last layer only we get a descent path to it from any initial parameter $U$.\\
+	Getting the right bound is tedious (see Bach 2017, quadrature rules). If $\rho$ is assumed bounded, Hoeffding-type inequalities give exponential concentration.
+\end{frame}
+
+\section{Future directions and conclusion}
+\begin{frame}{A necessary and sufficient condition ?}
+	Is $p\geq dim^*$ a necessary condition ? 
+	\begin{itemize}
+		\item For $\sigma(z) = z$ (resp. $z^2$)
+			\begin{equation*}
+				p\geq \mathcal{O}(\dim_*(\sigma, n)) \quad\text{1 (resp. n)}
+			\end{equation*}
+			is a sufficient parametrisation for the absence of spurious valleys.
+	\end{itemize}
+	\begin{block}{Conjecture}
+		If $p\geq\mathcal{O}(\dim_*(\sigma, n))$, then there is no spurious valley.
+	\end{block}
+\end{frame}
+
+\begin{frame}
+	Idea to prove it: instead of getting $\psi(W)$ full rank to reach any global optima\\
+	choose a minima written as follows:
+	\begin{equation*}
+		f^* = \sum_{i=1}^{\dim_*} u_i \psi_{\sigma, w^*_i} \quad\text{which is always possible}
+	\end{equation*}
+	and then generate the family $\psi_{\sigma, w^*_i}$ from $\psi(W)$ with a constant output path.\\
+	This is not easy to do, getting a better use of symmetries of the form $\theta=(U,W) \mapsto (UG_1, G_2W)$ for $(G_1,G_2)$ in some group $G$ that keep the output constant seems to be an important step...\\
+	and conjecture that one of the following is sufficient for the absence of spurious valley:
+	\begin{equation*}
+		p\geq \mathcal{O}\left(\frac{\dim^*}{\dim(G)}\right)\quad\text{or  }\mathcal{O}\left(\dim^* - \dim(G)\right)
+	\end{equation*}
+	...but nothing is clearly defined.
+\end{frame}
+
+\begin{frame}{Conclusion}
+	\begin{itemize}
+		\item If $\sigma$ is a polynomial of degree $\geq \mathcal{O}(n^d)$, then there is no spurious valley.
+		\item If the goal is empirical risk minimization and $p\geq N$, then there is no spurious valley.
+		\item For general networks, $p\geq k\log(\frac{k}{\delta})$ is sufficient for having spurious valley with floor at most $\frac{1}{k}$ with probability at least $1-\delta$ 
+	\end{itemize}
+	$\longrightarrow$ the largest the parametrisation, the less we have to worry about spurious valleys.\\
+
+\end{frame}
+
+
+
+\end{document}
